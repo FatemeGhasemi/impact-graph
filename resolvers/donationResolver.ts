@@ -176,7 +176,7 @@ export class DonationResolver {
           donation.valueEth = Number(amount) * donation.priceEth
 
           await donation.save()
-          
+
           return [
              donation.valueUsd,
              donation.valueEth
@@ -185,13 +185,15 @@ export class DonationResolver {
         .catch(e => {
           throw new Error(e)
         })
-        await tokenValues
 
         const projectOwner = await User.findOne({ id: Number(project.admin) })
 
         if (projectOwner) {
+
           await tokenValues
+
           analytics.identifyUser(projectOwner)
+          
           const segmentDonationReceived = {
             email: projectOwner.email,
             title: project.title,
