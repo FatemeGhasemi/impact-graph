@@ -767,6 +767,7 @@ export class ProjectResolver {
 
       //increment qualityScore
       project.updateQualityScoreHeart(false)
+      project.totalHearts = project.totalHearts - 1
       project.save()
       return false
     } else {
@@ -778,6 +779,7 @@ export class ProjectResolver {
       })
 
       project.updateQualityScoreHeart(true)
+      project.totalHearts = project.totalHearts + 1
       project.save()
 
       await Reaction.save(newReaction)

@@ -182,6 +182,10 @@ export class DonationResolver {
 
           await donation.save()
 
+          project.totalDonations = project.totalDonations + donation.priceUsd
+
+          await project.save()
+
           return [
              donation.valueUsd,
              donation.valueEth
