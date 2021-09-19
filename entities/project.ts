@@ -89,6 +89,11 @@ class Project extends BaseEntity {
   @Column({ nullable: true })
   walletAddress?: string
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  // it's for projects that cloned from Trace verified campaigns
+  campaignId?: string
+
   @Field(type => Boolean)
   @Column()
   verified: boolean

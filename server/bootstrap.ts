@@ -22,6 +22,7 @@ import { ProjectStatus } from '../entities/projectStatus';
 import { User } from '../entities/user';
 
 import AdminBro from 'admin-bro';
+import { TraceUtility } from '../utils/traceUtility';
 const AdminBroExpress = require('@admin-bro/express')
 
 // tslint:disable:no-var-requires
@@ -327,6 +328,8 @@ export async function bootstrap () {
     app.use(
       json({ limit: (config.get('UPLOAD_FILE_MAX_SIZE') as number) || 4000000 })
     )
+    const traceUtility = Container.get(TraceUtility);
+    traceUtility.startSyncingTraceProjects()
 
   } catch (err) {
     console.error(err)
