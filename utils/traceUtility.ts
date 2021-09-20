@@ -3,6 +3,7 @@ import { InjectRepository } from 'typeorm-typedi-extensions';
 import { Project } from '../entities/project';
 import { Repository } from 'typeorm';
 import { Service } from 'typedi';
+import axios from 'axios'
 import { Campaign } from '../types/Trace';
 
 @Service()
@@ -18,6 +19,10 @@ export class TraceUtility {
     schedule('* * * * *', () => {
       console.log('running a task every minute')
     })
+  }
+
+  private async getVerifiedCampaignsFromTrace(){
+    const verifiedCampaigns = await axios.get(`${process.env.TRACE_BACKEND_URL}`)
   }
 
   private async upsertCampaignProject(campaign: Campaign) {
