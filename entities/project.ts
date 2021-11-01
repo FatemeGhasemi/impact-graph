@@ -226,6 +226,11 @@ class Project extends BaseEntity {
     }
   }
 
+  static addVerifiedQuery(query: SelectQueryBuilder<Project>, direction: any) {
+    return query.andWhere('project.verified = true')
+                .orderBy(`project.creationDate`, direction)
+  }
+
   // Backward Compatible Projects Query with added pagination, frontend sorts and category search
   static searchProjects(limit: number, offset: number, sortBy: string, direction: any, category: string, searchTerm: string) {
     const query = this.createQueryBuilder('project')
@@ -242,7 +247,7 @@ class Project extends BaseEntity {
     if (sortBy === 'recentProjects' || sortBy === 'oldProjects') {
       this.addCustomDateQuery(query, sortBy, direction)
     } else if (sortBy === 'verified') {
-      query.andWhere('project.verified = true')
+      this.addVerifiedQuery(query, direction)
     } else if (sortBy === 'reactions') {
       this.addReactionsCountQuery(query, direction)
     } else if (sortBy === 'totalDonations') {
