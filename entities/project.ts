@@ -241,6 +241,8 @@ class Project extends BaseEntity {
 
     if (sortBy === 'recentProjects' || sortBy === 'oldProjects') {
       this.addCustomDateQuery(query, sortBy, direction)
+    } else if (sortBy === 'verified') {
+      query.andWhere('project.verified = true')
     } else if (sortBy === 'reactions') {
       this.addReactionsCountQuery(query, direction)
     } else if (sortBy === 'totalDonations') {
