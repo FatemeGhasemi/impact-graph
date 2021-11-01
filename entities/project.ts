@@ -211,6 +211,11 @@ class Project extends BaseEntity {
     return query.andWhere(`project.${filter} = ${filterValue}`);
   }
 
+  static addVerifiedQuery(query: SelectQueryBuilder<Project>, direction: any) {
+    return query.andWhere('project.verified = true')
+                .orderBy(`project.creationDate`, direction)
+  }
+
   // Backward Compatible Projects Query with added pagination, frontend sorts and category search
   static searchProjects(
     limit: number,
