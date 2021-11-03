@@ -212,19 +212,13 @@ class Project extends BaseEntity {
     query: SelectQueryBuilder<Project>,
     direction: any,
   ) {
-    query
+    return query
       .addSelect('SUM(donations.valueUsd)', 'donated')
       .groupBy(
         ' donations.id, project.id, reactions.id, status.id, users.id, c.id',
-      );
-
-    if (direction === 'ASC') {
-      return query.orderBy('donated', direction, 'NULLS FIRST');
-    } else {
-      return query.orderBy('donated', direction, 'NULLS LAST');
-    }
+      )
+      .orderBy('donated', direction);
   }
-
 
   static addFilterQuery(query: any, filter: string, filterValue: boolean) {
     return query.andWhere(`project.${filter} = ${filterValue}`);
@@ -259,7 +253,7 @@ class Project extends BaseEntity {
     // Sorts
     if (sortBy === OrderField.Reactions) {
       this.addReactionsCountQuery(query, direction);
-    } else if (sortBy ===  OrderField.Donations) {
+    } else if (sortBy === OrderField.Donations) {
       this.addTotalDonationsQuery(query, direction);
     } else {
       query.orderBy(`project.${sortBy}`, direction);
