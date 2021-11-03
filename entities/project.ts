@@ -248,7 +248,7 @@ class Project extends BaseEntity {
     // Sorts
     if (sortBy === OrderField.Reactions) {
       this.addReactionsCountQuery(query, direction);
-    } else if (sortBy === OrderField.Donations) {
+    } else if (sortBy ===  OrderField.Donations) {
       this.addTotalDonationsQuery(query, direction);
     } else {
       query.orderBy(`project.${sortBy}`, direction);
