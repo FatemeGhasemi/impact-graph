@@ -1,20 +1,19 @@
-import { Field, ID, Float, ObjectType, Authorized } from 'type-graphql';
+import { Field, Float, ID, ObjectType } from 'type-graphql';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
+  AfterUpdate,
+  BaseEntity,
+  Brackets,
   Column,
+  Entity,
+  Index,
+  JoinTable,
+  LessThan,
   ManyToMany,
   ManyToOne,
-  RelationId,
-  JoinTable,
-  BaseEntity,
   OneToMany,
-  Index,
-  MoreThan,
-  LessThan,
-  Brackets,
+  PrimaryGeneratedColumn,
+  RelationId,
   SelectQueryBuilder,
-  AfterUpdate,
 } from 'typeorm';
 
 import { Organisation } from './organisation';
@@ -24,6 +23,11 @@ import { Category } from './category';
 import { User } from './user';
 import { ProjectStatus } from './projectStatus';
 import ProjectTracker from '../services/segment/projectTracker';
+import { SegmentEvents } from '../analytics';
+import { Int } from 'type-graphql/dist/scalars/aliases';
+
+// tslint:disable-next-line:no-var-requires
+const moment = require('moment');
 
 export enum ProjStatus {
   rjt = 1,
@@ -40,12 +44,9 @@ export enum OrderField {
   Balance = 'balance',
   QualityScore = 'qualityScore',
   Verified = 'verified',
-  Reactions = 'reactions',
+  Reactions = 'totalReactions',
   Donations = 'totalDonations',
 }
-
-// tslint:disable-next-line:no-var-requires
-const moment = require('moment');
 
 @Entity()
 @ObjectType()
@@ -75,6 +76,10 @@ class Project extends BaseEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   description?: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  traceCampaignId?: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -156,16 +161,16 @@ class Project extends BaseEntity {
   statusId: number;
 
   @Field(type => Float)
-  @Column({ type: 'real', default: 0 })
-  totalDonations: number = 0;
+  @Column({ type: 'real' })
+  totalDonations: number;
 
-  @Field(type => Float)
-  @Column({ type: 'real', default: 0})
-  totalHearts: number = 0;
+  @Field(type => Int, { nullable: true })
+  @Column({ type: 'integer', nullable: true })
+  totalReactions: number;
 
   @Field(type => Boolean)
-  @Column({ default: true, nullable: false })
-  listed: boolean = true;
+  @Column({ default: null, nullable: true })
+  listed: boolean;
 
   /**
    * Custom Query Builders to chain together
@@ -206,6 +211,11 @@ class Project extends BaseEntity {
     return query.andWhere(`project.${filter} = ${filterValue}`);
   }
 
+  static addVerifiedQuery(query: SelectQueryBuilder<Project>, direction: any) {
+    return query.andWhere('project.verified = true')
+                .orderBy(`project.creationDate`, direction)
+  }
+
   // Backward Compatible Projects Query with added pagination, frontend sorts and category search
   static searchProjects(
     limit: number,
@@ -232,20 +242,35 @@ class Project extends BaseEntity {
     if (searchTerm) this.addSearchQuery(query, searchTerm);
     if (filter) this.addFilterQuery(query, filter, filterValue);
 
+<<<<<<< HEAD
+    query.orderBy(`project.${sortBy}`, direction);
+=======
     // Sorts
     if (sortBy === OrderField.Reactions) {
-      query.orderBy(`project.totalHearts`, direction);
-    } else if (sortBy === OrderField.Donations) {
-      query.orderBy(`project.totalDonations`, direction);
+      this.addReactionsCountQuery(query, direction);
+    } else if (sortBy ===  OrderField.Donations) {
+      this.addTotalDonationsQuery(query, direction);
     } else {
       query.orderBy(`project.${sortBy}`, direction);
     }
+>>>>>>> 95ac761 (Change direction of donation)
 
     return query.take(limit).skip(offset).getManyAndCount();
   }
 
-  static notifySegment(project: any, eventName: string) {
+  static notifySegment(project: any, eventName: SegmentEvents) {
     new ProjectTracker(project, eventName).track();
+  }
+
+  static pendingReviewSince(maximumDaysForListing: Number) {
+    const maxDaysForListing = moment()
+      .subtract(maximumDaysForListing, 'days')
+      .endOf('day');
+
+    return this.createQueryBuilder('project')
+      .where({ creationDate: LessThan(maxDaysForListing) })
+      .andWhere('project.listed IS NULL')
+      .getMany();
   }
 
   @Field(type => Float, { nullable: true })
@@ -283,7 +308,7 @@ class Project extends BaseEntity {
 
   @AfterUpdate()
   notifyProjectEdited() {
-    Project.notifySegment(this, 'Project edited');
+    Project.notifySegment(this, SegmentEvents.PROJECT_EDITED);
   }
 }
 

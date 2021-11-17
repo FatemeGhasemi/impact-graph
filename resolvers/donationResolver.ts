@@ -13,7 +13,7 @@ import { getTokenPrices, getOurTokenList } from 'monoswap';
 import { Donation } from '../entities/donation';
 import { MyContext } from '../types/MyContext';
 import { Project } from '../entities/project';
-import { getAnalytics } from '../analytics';
+import { getAnalytics, SegmentEvents } from '../analytics';
 import { Token } from '../entities/token';
 import { Repository, In } from 'typeorm';
 import { User } from '../entities/user';
@@ -84,22 +84,16 @@ export class DonationResolver {
     });
     return donations;
   }
-
   @Query(returns => PaginateDonations, { nullable: true })
-  async donationsByDestinationWallets(
+  async donationsByProjectId(
     @Ctx() ctx: MyContext,
     @Arg('skip', { defaultValue: 0 }) skip: number,
     @Arg('take', { defaultValue: 10 }) take: number,
-    @Arg('toWalletAddresses', type => [String]) toWalletAddresses: string[],
+    @Arg('projectId', type => Number) projectId: number,
   ) {
-    const toWalletAddressesArray: string[] = toWalletAddresses.map(o =>
-      o.toLowerCase(),
-    );
-
     const query = this.donationRepository
       .createQueryBuilder('donation')
-      .where('lower(donation.toWalletAddress) IN (:...addresses)')
-      .setParameter('addresses', toWalletAddressesArray);
+      .where(`donation.projectId = ${projectId}`);
 
     const [donations, donationsCount] = await query
       .limit(take)
@@ -254,7 +248,7 @@ export class DonationResolver {
         };
 
         analytics.track(
-          'Made donation',
+          SegmentEvents.MADE_DONATION,
           originUser.segmentUserId(),
           segmentDonationMade,
           originUser.segmentUserId(),
@@ -273,7 +267,7 @@ export class DonationResolver {
         };
 
         analytics.track(
-          'Donation received',
+          SegmentEvents.DONATION_RECEIVED,
           projectOwner.segmentUserId(),
           segmentDonationReceived,
           projectOwner.segmentUserId(),
