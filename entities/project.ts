@@ -212,8 +212,9 @@ class Project extends BaseEntity {
   }
 
   static addVerifiedQuery(query: SelectQueryBuilder<Project>, direction: any) {
-    return query.andWhere('project.verified = true')
-                .orderBy(`project.creationDate`, direction)
+    return query
+      .andWhere('project.verified = true')
+      .orderBy(`project.creationDate`, direction);
   }
 
   // Backward Compatible Projects Query with added pagination, frontend sorts and category search
@@ -242,19 +243,7 @@ class Project extends BaseEntity {
     if (searchTerm) this.addSearchQuery(query, searchTerm);
     if (filter) this.addFilterQuery(query, filter, filterValue);
 
-<<<<<<< HEAD
     query.orderBy(`project.${sortBy}`, direction);
-=======
-    // Sorts
-    if (sortBy === OrderField.Reactions) {
-      this.addReactionsCountQuery(query, direction);
-    } else if (sortBy ===  OrderField.Donations) {
-      this.addTotalDonationsQuery(query, direction);
-    } else {
-      query.orderBy(`project.${sortBy}`, direction);
-    }
->>>>>>> 95ac761 (Change direction of donation)
-
     return query.take(limit).skip(offset).getManyAndCount();
   }
 
