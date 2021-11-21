@@ -172,6 +172,10 @@ class Project extends BaseEntity {
   @Column({ default: null, nullable: true })
   listed: boolean;
 
+  // Virtual attribute to subquery result into
+  @Field(type => User)
+  adminUser?: User
+
   /**
    * Custom Query Builders to chain together
    */
@@ -233,6 +237,7 @@ class Project extends BaseEntity {
       .leftJoinAndSelect('project.donations', 'donations')
       .leftJoinAndSelect('project.reactions', 'reactions')
       .leftJoinAndSelect('project.users', 'users')
+      .leftJoinAndMapOne('project.adminUser', User, "user", "user.id = CAST(project.admin AS INTEGER)")
       .innerJoinAndSelect('project.categories', 'c')
       .where(
         `project.statusId = ${ProjStatus.active} AND project.listed = true`,
@@ -244,7 +249,11 @@ class Project extends BaseEntity {
     if (filter) this.addFilterQuery(query, filter, filterValue);
 
     query.orderBy(`project.${sortBy}`, direction);
-    return query.take(limit).skip(offset).getManyAndCount();
+
+    const projects = query.take(limit).skip(offset).getMany();
+    const totalCount = query.getCount();
+
+    return Promise.all([projects, totalCount]);
   }
 
   static notifySegment(project: any, eventName: SegmentEvents) {
