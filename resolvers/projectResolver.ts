@@ -335,7 +335,13 @@ export class ProjectResolver {
       .leftJoinAndSelect('project.status', 'status')
       .leftJoinAndSelect('project.categories', 'categories')
       .leftJoinAndSelect('project.reactions', 'reactions')
-      .leftJoinAndMapOne('project.adminUser', User, "user", "user.id = CAST(project.admin AS INTEGER)")
+      .leftJoinAndSelect('project.donations', 'donations')
+      .leftJoinAndMapOne(
+        'project.adminUser',
+        User,
+        'user',
+        'user.id = CAST(project.admin AS INTEGER)',
+      )
       .getOne();
   }
 
@@ -566,7 +572,6 @@ export class ProjectResolver {
       totalReactions: 0,
       verified: false,
       giveBacks: false,
-      listed: false,
     });
 
     const newProject = await this.projectRepository.save(project);
