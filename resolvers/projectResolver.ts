@@ -156,7 +156,7 @@ class GetProjectsArgs {
   @Min(0)
   skip: number;
 
-  @Field(type => Int, { defaultValue: 0 })
+  @Field(type => Int, { defaultValue: 10 })
   @Min(0)
   @Max(50)
   take: number;
@@ -264,7 +264,9 @@ export class ProjectResolver {
       filterBy?.value,
     );
 
-    return { projects, totalCount, categories };
+    const paginated_projects = projects.slice(skip, skip + take)
+
+    return { projects: paginated_projects, totalCount, categories };
   }
 
   @Query(returns => TopProjects)
