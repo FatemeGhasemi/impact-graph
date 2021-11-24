@@ -215,7 +215,7 @@ Then you need to run the migrations like so:
 npm run typeorm:cli -- migration:run
 ```
 
-If you want to revert last migration :
+If you want to revert last migration:
 
 ```
 npm run typeorm:cli -- migration:revert
