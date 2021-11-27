@@ -190,6 +190,11 @@ export class LoginResolver {
         },
       },
     });
+    console.log('loginWallet  ',
+      {
+        hashedMsg,
+        msgParams
+      })
 
     if (hashedMsg === null) return null;
 
@@ -197,7 +202,10 @@ export class LoginResolver {
       data: JSON.parse(msgParams),
       sig: signature,
     });
-
+    console.log('loginWallet  ',
+      {
+        publicAddress
+      })
     if (!publicAddress) return null;
 
     const publicAddressLowerCase = publicAddress.toLocaleLowerCase();
