@@ -209,7 +209,11 @@ export class LoginResolver {
     if (!publicAddress) return null;
 
     const publicAddressLowerCase = publicAddress.toLocaleLowerCase();
-
+    console.log('loginWallet  ',
+      {
+        publicAddressLowerCase,
+        walletAddressLowerCase:walletAddress.toLocaleLowerCase()
+      })
     if (walletAddress.toLocaleLowerCase() !== publicAddressLowerCase)
       return null;
 
