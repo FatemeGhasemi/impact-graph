@@ -193,7 +193,8 @@ export class LoginResolver {
     console.log('loginWallet  ',
       {
         hashedMsg,
-        msgParams
+        msgParams,
+        signature
       })
 
     if (hashedMsg === null) return null;
