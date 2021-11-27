@@ -166,18 +166,16 @@ export class LoginResolver {
   ): Promise<LoginResponse | null> {
     const hashedMsg = this.getHostnameSignMessageHash(hostname);
 
+    const types = {
+      Mail: [
+        { name: 'contents', type: 'string' },
+        { name: 'user', type: 'User' }
+      ],
+      User: [{ name: 'wallets', type: 'address[]' }]
+    }
     const msgParams = JSON.stringify({
       primaryType: 'Login',
-      types: {
-        EIP712Domain: [
-          { name: 'name', type: 'string' },
-          { name: 'chainId', type: 'uint256' },
-          { name: 'version', type: 'string' },
-          // { name: 'verifyingContract', type: 'address' }
-        ],
-        Login: [{ name: 'user', type: 'User' }],
-        User: [{ name: 'wallets', type: 'address[]' }],
-      },
+      types,
       domain: {
         name: 'Giveth Login',
         chainId: networkId,
