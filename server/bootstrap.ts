@@ -23,12 +23,14 @@ import AdminBro from 'admin-bro';
 import { runCheckPendingDonationsCronJob } from '../services/syncDonationsWithNetwork';
 import { runCheckPendingProjectListingCronJob } from '../services/syncProjectsRequiredForListing';
 import { webhookHandler } from '../services/transak/webhookHandler';
-import { SegmentEvents } from '../analytics';
+import { SegmentEvents } from '../analytics/analytics';
 
 const AdminBroExpress = require('@admin-bro/express');
 
 import { adminBroRootPath, getAdminBroRouter } from './adminBro';
+import { runGivingBlocksProjectSynchronization } from '../services/the-giving-blocks/syncProjectsCronJob';
 import { initHandlingTraceCampaignUpdateEvents } from '../services/trace/traceService';
+import { processSendSegmentEventsJobs } from '../analytics/segmentQueue';
 
 // tslint:disable:no-var-requires
 const express = require('express');
@@ -182,7 +184,13 @@ export async function bootstrap() {
     );
     runCheckPendingDonationsCronJob();
     runCheckPendingProjectListingCronJob();
+    processSendSegmentEventsJobs();
     initHandlingTraceCampaignUpdateEvents();
+
+    // If we need to deactivate the process use the env var
+    if ((config.get('GIVING_BLOCKS_SERVICE_ACTIVE') as string) === 'true') {
+      runGivingBlocksProjectSynchronization();
+    }
   } catch (err) {
     console.error(err);
   }

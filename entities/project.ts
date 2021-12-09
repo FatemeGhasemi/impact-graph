@@ -1,7 +1,9 @@
 import { Field, Float, ID, ObjectType } from 'type-graphql';
 import {
+  AfterInsert,
   AfterUpdate,
   BaseEntity,
+  BeforeRemove,
   Brackets,
   Column,
   Entity,
@@ -14,6 +16,7 @@ import {
   PrimaryGeneratedColumn,
   RelationId,
   SelectQueryBuilder,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import { Organisation } from './organisation';
@@ -23,7 +26,7 @@ import { Category } from './category';
 import { User } from './user';
 import { ProjectStatus } from './projectStatus';
 import ProjectTracker from '../services/segment/projectTracker';
-import { SegmentEvents } from '../analytics';
+import { SegmentEvents } from '../analytics/analytics';
 import { Int } from 'type-graphql/dist/scalars/aliases';
 
 // tslint:disable-next-line:no-var-requires
@@ -41,10 +44,12 @@ export enum ProjStatus {
 
 export enum OrderField {
   CreationDate = 'creationDate',
+  UpdatedAt = 'updatedAt',
   Balance = 'balance',
   QualityScore = 'qualityScore',
   Verified = 'verified',
   Reactions = 'totalReactions',
+  Traceable = 'traceCampaignId',
   Donations = 'totalDonations',
 }
 
@@ -81,6 +86,19 @@ class Project extends BaseEntity {
   @Column({ nullable: true })
   traceCampaignId?: string;
 
+  @Index({ unique: true, where: '"givingBlocksId" IS NOT NULL' })
+  @Field({ nullable: true })
+  @Column({ default: null, nullable: true })
+  givingBlocksId?: string;
+
+  @Field({ nullable: true })
+  @Column({ default: null, nullable: true })
+  website?: string;
+
+  @Field({ nullable: true })
+  @Column({ default: null, nullable: true })
+  youtube?: string;
+
   @Field({ nullable: true })
   @Column({ nullable: true })
   organisationId?: number;
@@ -88,6 +106,10 @@ class Project extends BaseEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   creationDate: Date;
+
+  @Field({ nullable: true })
+  @UpdateDateColumn({ nullable: true })
+  updatedAt: Date;
 
   @Field(type => [Organisation])
   @ManyToMany(type => Organisation)
@@ -238,7 +260,8 @@ class Project extends BaseEntity {
   ) {
     const query = this.createQueryBuilder('project')
       .leftJoinAndSelect('project.status', 'status')
-      .leftJoinAndSelect('project.donations', 'donations')
+      // TODO It was very expensive query and made our backend down in production, maybe we should remove the reactions as well
+      // .leftJoinAndSelect('project.donations', 'donations')
       .leftJoinAndSelect('project.reactions', 'reactions')
       .leftJoinAndSelect('project.users', 'users')
       .leftJoinAndMapOne(
@@ -257,16 +280,31 @@ class Project extends BaseEntity {
     if (searchTerm) this.addSearchQuery(query, searchTerm);
     if (filter) this.addFilterQuery(query, filter, filterValue);
 
-    query.orderBy(`project.${sortBy}`, direction);
+    if (sortBy == 'traceCampaignId') {
+      // TODO: PRISMA will fix this, temporary fix inverting nulls.
+      let traceableDirection = { 'ASC': 'NULLS FIRST', 'DESC': 'NULLS LAST' }
+      query.orderBy(`project.${sortBy}`, direction, traceableDirection[direction]);
+    } else {
+      query.orderBy(`project.${sortBy}`, direction);
+    }
 
-    const projects = query.getMany();
+    const projects = query.take(limit).skip(offset).getMany();
     const totalCount = query.getCount();
 
     return Promise.all([projects, totalCount]);
   }
 
-  static notifySegment(project: any, eventName: SegmentEvents) {
+  static notifySegment(project: Project, eventName: SegmentEvents) {
     new ProjectTracker(project, eventName).track();
+  }
+
+  static sendBulkEventsToSegment(
+    projects: [Project],
+    eventName: SegmentEvents,
+  ) {
+    for (const project of projects) {
+      this.notifySegment(project, eventName);
+    }
   }
 
   static pendingReviewSince(maximumDaysForListing: Number) {
@@ -349,6 +387,16 @@ class ProjectUpdate extends BaseEntity {
   @Field(type => Boolean)
   @Column({ nullable: true })
   isMain: boolean;
+
+  @AfterInsert()
+  async updateProjectStampOnCreation() {
+    await Project.update({ id: this.projectId }, { updatedAt: moment() });
+  }
+
+  @BeforeRemove()
+  async updateProjectStampOnDeletion() {
+    await Project.update({ id: this.projectId }, { updatedAt: moment() });
+  }
 }
 
 export { Project, Category, ProjectUpdate };

@@ -1,6 +1,6 @@
 import Analytics from 'analytics-node';
-import config from './config';
-import { User } from './entities/user';
+import config from '../config';
+import { User } from '../entities/user';
 
 export enum SegmentEvents {
   PROJECT_LISTED = 'Project listed',
@@ -37,14 +37,6 @@ class GraphAnalytics {
   }
 
   track(eventName: SegmentEvents, analyticsUserId, properties, anonymousId) {
-    // console.log(
-    //   `{ eventName, analyticsUserId, properties, anonymousId } : ${JSON.stringify(
-    //     { eventName, analyticsUserId, properties, anonymousId },
-    //     null,
-    //     2
-    //   )}`
-    // )
-
     let userId;
     if (!analyticsUserId) {
       userId = anonymousId;
@@ -62,18 +54,8 @@ class GraphAnalytics {
 }
 
 export function getAnalytics() {
-  let options;
-  if (config.get('ENVIRONMENT') === 'local') {
-    options = {
-      flushAt: 1,
-    };
-  } else {
-    options: {
-    }
-  }
-  const segmentAnalytics = new Analytics(
-    config.get('SEGMENT_API_KEY'),
-    options,
-  );
+  const segmentAnalytics = new Analytics(config.get('SEGMENT_API_KEY'), {
+    flushAt: 1,
+  });
   return new GraphAnalytics(segmentAnalytics);
 }

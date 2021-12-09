@@ -1,10 +1,12 @@
 import { Project } from '../entities/project';
 import { ProjectUpdate } from '../entities/project';
 
-export const updateTotalProjectUpdatesOfAProject = async (projectId: number) => {
+export const updateTotalProjectUpdatesOfAProject = async (
+  projectId: number,
+) => {
   try {
     const totalProjectUpdates = await ProjectUpdate.count({
-      projectId,
+      where: { projectId, isMain: false },
     });
     await Project.update(
       { id: projectId },

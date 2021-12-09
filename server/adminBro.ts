@@ -6,7 +6,7 @@ import AdminBroExpress from '@admin-bro/express';
 import config from '../config';
 import { dispatchProjectUpdateEvent } from '../services/trace/traceService';
 import { Database, Resource } from '@admin-bro/typeorm';
-import { SegmentEvents } from '../analytics';
+import { SegmentEvents } from '../analytics/analytics';
 
 // tslint:disable-next-line:no-var-requires
 const bcrypt = require('bcrypt');
@@ -50,6 +50,22 @@ const getAdminBroInstance = () => {
         'https://icoholder.com/media/cache/ico_logo_view_page/files/img/e15c430125a607a604a3aee82e65a8f7.png',
       companyName: 'Giveth',
       softwareBrothers: false,
+    },
+    locale: {
+      translations: {
+        resources: {
+          Project: {
+            properties: {
+              listed: 'Listed',
+              'listed.true': 'Listed',
+              'listed.false': 'Unlisted',
+              'listed.null': 'Not Reviewed',
+              'listed.undefined': 'Not Reviewed',
+            },
+          },
+        },
+      },
+      language: 'en',
     },
     resources: [
       {
@@ -103,6 +119,9 @@ const getAdminBroInstance = () => {
                 edit: false,
               },
             },
+            totalProjectUpdates: {
+              isVisible: false,
+            },
             giveBacks: {
               isVisible: false,
             },
@@ -114,6 +133,9 @@ const getAdminBroInstance = () => {
                 edit: false,
               },
             },
+            totalReactions: {
+              isVisible: false,
+            },
             walletAddress: {
               isVisible: { list: false, filter: false, show: true, edit: true },
             },
@@ -122,6 +144,12 @@ const getAdminBroInstance = () => {
             },
             slugHistory: {
               isVisible: false,
+            },
+            listed: {
+              isVisible: true,
+              components: {
+                filter: AdminBro.bundle('./components/FilterListedComponent'),
+              },
             },
           },
           actions: {
@@ -304,12 +332,12 @@ const listDelist = async (context, request, list = true) => {
       .updateEntity(true)
       .execute();
 
+    Project.sendBulkEventsToSegment(
+      projects.raw,
+      list ? SegmentEvents.PROJECT_LISTED : SegmentEvents.PROJECT_UNLISTED,
+    );
     projects.raw.forEach(project => {
       dispatchProjectUpdateEvent(project);
-      Project.notifySegment(
-        project,
-        list ? SegmentEvents.PROJECT_LISTED : SegmentEvents.PROJECT_UNLISTED,
-      );
     });
   } catch (error) {
     console.log('listDelist error', error);
@@ -338,14 +366,14 @@ const verifyProjects = async (context, request, verified = true) => {
       .updateEntity(true)
       .execute();
 
+    Project.sendBulkEventsToSegment(
+      projects.raw,
+      verified
+        ? SegmentEvents.PROJECT_VERIFIED
+        : SegmentEvents.PROJECT_UNVERIFIED,
+    );
     projects.raw.forEach(project => {
       dispatchProjectUpdateEvent(project);
-      Project.notifySegment(
-        project,
-        verified
-          ? SegmentEvents.PROJECT_VERIFIED
-          : SegmentEvents.PROJECT_UNVERIFIED,
-      );
     });
   } catch (error) {
     console.log('verifyProjects() error', error);
@@ -378,12 +406,12 @@ const updateStatuslProjects = async (context, request, status) => {
         .updateEntity(true)
         .execute();
 
+      Project.sendBulkEventsToSegment(
+        projects.raw,
+        segmentProjectStatusEvents[projectStatus.symbol],
+      );
       projects.raw.forEach(project => {
         dispatchProjectUpdateEvent(project);
-        Project.notifySegment(
-          project,
-          segmentProjectStatusEvents[projectStatus.symbol],
-        );
       });
     }
   } catch (error) {
