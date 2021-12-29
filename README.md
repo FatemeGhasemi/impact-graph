@@ -64,6 +64,7 @@ The first usecase we are building is user registration and putting projects in t
 
 There are many strategies available for authentication
 
+
 #### Email address and password
 
 ```javascript
