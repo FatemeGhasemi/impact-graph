@@ -38,7 +38,7 @@ jobs:
 
 
   deploy:
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'|| github.ref == 'refs/heads/staging'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'|| github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/staging-test-deploy'
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -52,10 +52,10 @@ jobs:
           privateKey: ${{ secrets.DEVELOP_PRIVATE_KEY}}
 
       - name: staging deploy
-        if: github.ref == 'refs/heads/staging'
+        if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/staging-test-deploy'
         uses: garygrossgarten/github-action-ssh@v0.6.4
         with:
-          command: cd impact-graph && git checkout staging && git pull && npm ci && npm run typeorm:cli:live -- migration:run && npm run serve;
+          command: cd impact-graph && echo "I am in impact-graph directory" && git checkout staging && git pull && npm ci --verbose && npm run typeorm:cli:live -- migration:run && npm run serve;
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USERNAME }}
           privateKey: ${{ secrets.STAGING_PRIVATE_KEY}}
