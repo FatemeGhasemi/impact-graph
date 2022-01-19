@@ -10,6 +10,10 @@ export class AddProjectStatus1614079067364 implements MigrationInterface {
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE "project_status"`);
+    try {
+      await queryRunner.query(`DROP TABLE "project_status"`);
+    } catch (e) {
+      console.log('AddProjectStatus1614079067364 error', e);
+    }
   }
 }

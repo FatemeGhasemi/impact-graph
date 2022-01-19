@@ -8,6 +8,10 @@ export class addCategoryTable1640767594947 implements MigrationInterface {
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE "category"`);
+    try {
+      await queryRunner.query(`DROP TABLE "category"`);
+    } catch (e) {
+      console.log('addCategoryTable1640767594947 error', e);
+    }
   }
 }
