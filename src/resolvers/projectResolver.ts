@@ -267,9 +267,9 @@ export class ProjectResolver {
       filterBy?.value,
     );
 
-    const paginated_projects = projects.slice(skip, skip + take)
+    const paginatedProjects = projects.slice(skip, skip + take);
 
-    return { projects: paginated_projects, totalCount, categories };
+    return { projects: paginatedProjects, totalCount, categories };
   }
 
   @Query(returns => TopProjects)
