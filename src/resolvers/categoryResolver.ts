@@ -4,6 +4,7 @@ import { InjectRepository } from 'typeorm-typedi-extensions';
 
 import { User } from '../entities/user';
 import { Category } from '../entities/category';
+import { findAllCategories } from '../repositories/categoryRepository';
 
 @Resolver(of => User)
 export class CategoryResolver {
@@ -14,6 +15,7 @@ export class CategoryResolver {
 
   @Query(returns => [Category], { nullable: true })
   categories() {
-    return this.categoryRepository.find();
+    // return this.categoryRepository.find();
+    return findAllCategories();
   }
 }
