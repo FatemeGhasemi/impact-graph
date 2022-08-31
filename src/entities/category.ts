@@ -40,6 +40,10 @@ export class Category extends BaseEntity {
   mainCategory: MainCategory;
 
   @Field()
+  @Column('integer')
+  order: number;
+
+  @Field()
   @Column({ default: true })
   // There are some categories that exist, we cant delete them but we dont want allow users
   // To use them anymore on project creation/updating, so we change set the isActive false for them

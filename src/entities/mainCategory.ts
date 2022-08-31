@@ -22,6 +22,10 @@ export class MainCategory extends BaseEntity {
   title: string;
 
   @Field()
+  @Column('integer')
+  order: number;
+
+  @Field()
   @Column('text', { unique: true })
   slug: string;
 
